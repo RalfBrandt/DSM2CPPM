@@ -1,0 +1,557 @@
+                        .module dsm_remote.c
+                        .area text(rom, con, rel)
+ 0000                   .dbfile ./dsm_remote.c
+                        .area data(ram, con, rel)
+ 0000                   .dbfile ./dsm_remote.c
+ 0000           _BindMode::
+ 0000                   .blkb 1
+                        .area idata(rom,lit)
+ 0000 00                .byte 0
+                        .area data(ram, con, rel)
+ 0001                   .dbfile ./dsm_remote.c
+ 0001                   .dbfile E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~2\SATELI~1\SATELI~1\dsm_remote.c
+ 0001                   .dbsym e BindMode _BindMode c
+                        .area text(rom, con, rel)
+ 0000                   .dbfile E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~2\SATELI~1\SATELI~1\dsm_remote.c
+ 0000                   .dbfunc e DSM_DeterminBitCount _DSM_DeterminBitCount fc
+ 0000           ;            min -> X+3
+ 0000           ;            max -> X+2
+ 0000           ;              n -> X+1
+ 0000           ;         chanal -> X+0
+ 0000           _DSM_DeterminBitCount::
+ 0000                   .dbline -1
+ 0000 10                push X
+ 0001 4F                mov X,SP
+ 0002 3804              add SP,4
+ 0004                   .dbline 25
+ 0004           ; /*this module does contain the code to extract the data from
+ 0004           ; *the serial stream from the sattelite reciver
+ 0004           ; * the first byte ist a lost frame counter
+ 0004           ; * the second byte is a transmitter capability byte
+ 0004           ; * 0x1 DSM2 less that 8 chanal 1024 Bit 
+ 0004           ; * 0x2 DSM2 8 or more chanal 1024 Bit
+ 0004           ; * 0x11/0x12 like 0x1/0x2 but 2048 Bit
+ 0004           ; *next is the chanal data, one chanal per WORD
+ 0004           ; *BITS: the lowes 10/11 bit is the chanal value, right above (4 Bit) is the chanal Number
+ 0004           ; * xxCCCCVVVVVVVVVV (10 bit) or xCCCCVVVVVVVVVVV (11Bit)
+ 0004           ; */
+ 0004           ; #include <m8c.h>        // part specific constants and macros
+ 0004           ; #include "PSoCAPI.h"    // PSoC API definitions for all User Modules
+ 0004           ; #include "DSM_Remote.h"
+ 0004           ; #include "ppm.h"
+ 0004           ; #include "serial.h"
+ 0004           ; #include "timer.h"
+ 0004           ; 
+ 0004           ; BOOL BindMode=0;
+ 0004           ; 
+ 0004           ; //determin if we got 10 or 11 Bit data
+ 0004           ; //first check the transmiter capability  byte
+ 0004           ; //else tryout
+ 0004           ; BYTE DSM_DeterminBitCount(void)
+ 0004           ; {
+ 0004                   .dbline 38
+ 0004           ;       //check capability byte first
+ 0004           ;       /*if (ser_databuf[1]!=0)
+ 0004           ;       {
+ 0004           ;               if ((ser_databuf[1]&0xF)<=3)
+ 0004           ;               {
+ 0004           ;                       if (ser_databuf[1]&0x10)
+ 0004           ;                               return 11;
+ 0004           ;                       else 
+ 0004           ;                               return 10;
+ 0004           ;               }
+ 0004           ;       }*/
+ 0004           ;       //else tryout
+ 0004           ;       {
+ 0004                   .dbline 39
+ 0004           ;               BYTE min=0xff;
+ 0004 5603FF            mov [X+3],-1
+ 0007                   .dbline 40
+ 0007           ;               BYTE max=0;
+ 0007 560200            mov [X+2],0
+ 000A                   .dbline 44
+ 000A           ;               BYTE chanal;
+ 000A           ;               BYTE n;
+ 000A           ;               //try 10 Bits
+ 000A           ;               for (n=0;n<7;n++)
+ 000A 560100            mov [X+1],0
+ 000D 8038              xjmp L5
+ 000F           L2:
+ 000F                   .dbline 45
+ 000F           ;               {
+ 000F                   .dbline 46
+ 000F           ;                       chanal=(ser_databuf[n*2+2]>>2)&0xF;
+ 000F 5201              mov A,[X+1]
+ 0011 64                asl A
+ 0012 0102              add A,<_ser_databuf+2
+ 0014 5300              mov [__r1],A
+ 0016 3E00              mvi A,[__r1]
+ 0018 67                asr A
+ 0019 67                asr A
+ 001A 210F              and A,15
+ 001C 5400              mov [X+0],A
+ 001E                   .dbline 47
+ 001E           ;                       if (chanal && chanal<min)
+ 001E 3D0000            cmp [X+0],0
+ 0021 A00B              jz L7
+ 0023 5200              mov A,[X+0]
+ 0025 3B03              cmp A,[X+3]
+ 0027 D005              jnc L7
+ 0029           X0:
+ 0029                   .dbline 48
+ 0029           ;                               min=chanal;
+ 0029 5200              mov A,[X+0]
+ 002B 5403              mov [X+3],A
+ 002D           L7:
+ 002D                   .dbline 49
+ 002D           ;                       if(ser_databuf[n*2+2]!=0xFF  && chanal>max)
+ 002D 5201              mov A,[X+1]
+ 002F 64                asl A
+ 0030 0102              add A,<_ser_databuf+2
+ 0032 5300              mov [__r1],A
+ 0034 3E00              mvi A,[__r1]
+ 0036 39FF              cmp A,-1
+ 0038 A00B              jz L9
+ 003A 5202              mov A,[X+2]
+ 003C 3B00              cmp A,[X+0]
+ 003E D005              jnc L9
+ 0040           X1:
+ 0040                   .dbline 50
+ 0040           ;                               max=chanal;
+ 0040 5200              mov A,[X+0]
+ 0042 5402              mov [X+2],A
+ 0044           L9:
+ 0044                   .dbline 51
+ 0044           ;               }               
+ 0044           L3:
+ 0044                   .dbline 44
+ 0044 7701              inc [X+1]
+ 0046           L5:
+ 0046                   .dbline 44
+ 0046 3D0107            cmp [X+1],7
+ 0049 CFC5              jc L2
+ 004B           X2:
+ 004B                   .dbline 52
+ 004B           ;               if (min==1 &&  max && max <7)
+ 004B 3D0301            cmp [X+3],1
+ 004E B00F              jnz L12
+ 0050 3D0200            cmp [X+2],0
+ 0053 A00A              jz L12
+ 0055 3D0207            cmp [X+2],7
+ 0058 D005              jnc L12
+ 005A           X3:
+ 005A                   .dbline 53
+ 005A           ;                       return 10;
+ 005A 500A              mov A,10
+ 005C 8003              xjmp L1
+ 005E           L12:
+ 005E                   .dbline 55
+ 005E           ;               else 
+ 005E           ;                       return 11;
+ 005E 500B              mov A,11
+ 0060                   .dbline -2
+ 0060           L1:
+ 0060 38FC              add SP,-4
+ 0062 20                pop X
+ 0063                   .dbline 0 ; func end
+ 0063 7F                ret
+ 0064                   .dbsym l min 3 c
+ 0064                   .dbsym l max 2 c
+ 0064                   .dbsym l n 1 c
+ 0064                   .dbsym l chanal 0 c
+ 0064                   .dbend
+                        .area bss(ram, con, rel)
+ 0000                   .dbfile E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~2\SATELI~1\SATELI~1\dsm_remote.c
+ 0000           L15:
+ 0000                   .blkb 1
+ 0001           L20:
+ 0001                   .blkb 1
+ 0002           L21:
+ 0002                   .blkb 2
+                        .area text(rom, con, rel)
+ 0064                   .dbfile E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~2\SATELI~1\SATELI~1\dsm_remote.c
+ 0064                   .dbfunc e DSM_process_Data _DSM_process_Data fc
+ 0064                   .dbsym s value L21 i
+ 0064                   .dbsym s chanal L20 c
+ 0064                   .dbsym s bits L15 c
+ 0064           ;              n -> X+0
+ 0064           _DSM_process_Data::
+ 0064                   .dbline -1
+ 0064 10                push X
+ 0065 4F                mov X,SP
+ 0066 3801              add SP,1
+ 0068                   .dbline 61
+ 0068           ;       }
+ 0068           ; }
+ 0068           ; 
+ 0068           ; //Extract chanal data from serial data
+ 0068           ; BOOL DSM_process_Data(void)
+ 0068           ; {
+ 0068                   .dbline 64
+ 0068           ; 
+ 0068           ; static BYTE bits;     
+ 0068           ;       if (!bits) //check if we have 10 or 11 Bit data
+ 0068 3C0000            cmp [L15],0
+ 006B B005              jnz L16
+ 006D                   .dbline 65
+ 006D           ;               bits=DSM_DeterminBitCount();
+ 006D 9F91              xcall _DSM_DeterminBitCount
+ 006F 5300              mov [L15],A
+ 0071           L16:
+ 0071                   .dbline 66
+ 0071           ;       if (bits)
+ 0071 3C0000            cmp [L15],0
+ 0074 A11B              jz L18
+ 0076                   .dbline 68
+ 0076           ;       {
+ 0076           ;       BYTE n;
+ 0076                   .dbline 73
+ 0076           ;       //static to safe stack space            
+ 0076           ;       static BYTE chanal; 
+ 0076           ;       static WORD value;      
+ 0076           ;               //loop thru the words 
+ 0076           ;               for (n=0;n<7;n++)
+ 0076 560000            mov [X+0],0
+ 0079 810D              xjmp L25
+ 007B           L22:
+ 007B                   .dbline 74
+ 007B           ;               {       //extract chanal number
+ 007B                   .dbline 75
+ 007B           ;                       if (bits==10)
+ 007B 3C000A            cmp [L15],10
+ 007E B012              jnz L26
+ 0080                   .dbline 76
+ 0080           ;                               chanal=(ser_databuf[n*2+2]>>2)&0xF;
+ 0080 5200              mov A,[X+0]
+ 0082 64                asl A
+ 0083 0102              add A,<_ser_databuf+2
+ 0085 5300              mov [__r1],A
+ 0087 3E00              mvi A,[__r1]
+ 0089 67                asr A
+ 008A 67                asr A
+ 008B 210F              and A,15
+ 008D 5301              mov [L20],A
+ 008F 8011              xjmp L27
+ 0091           L26:
+ 0091                   .dbline 78
+ 0091           ;                       else 
+ 0091           ;                               chanal=(ser_databuf[n*2+2]>>3)&0xF;
+ 0091 5200              mov A,[X+0]
+ 0093 64                asl A
+ 0094 0102              add A,<_ser_databuf+2
+ 0096 5300              mov [__r1],A
+ 0098 3E00              mvi A,[__r1]
+ 009A 67                asr A
+ 009B 67                asr A
+ 009C 67                asr A
+ 009D 210F              and A,15
+ 009F 5301              mov [L20],A
+ 00A1           L27:
+ 00A1                   .dbline 80
+ 00A1           ;                       //check if chanal numer is in range
+ 00A1           ;                       if (chanal<PPM_PULSE_COUNT && ser_databuf[n*2+2]!=0xFF)
+ 00A1 3C0108            cmp [L20],8
+ 00A4 D0E0              jnc L30
+ 00A6           X4:
+ 00A6 5200              mov A,[X+0]
+ 00A8 64                asl A
+ 00A9 0102              add A,<_ser_databuf+2
+ 00AB 5300              mov [__r1],A
+ 00AD 3E00              mvi A,[__r1]
+ 00AF 39FF              cmp A,-1
+ 00B1 A0D3              jz L30
+ 00B3                   .dbline 83
+ 00B3           ;                               //extract chanal value
+ 00B3           ;                       {
+ 00B3           ;                               if (bits==10)
+ 00B3                   .dbline 83
+ 00B3 3C000A            cmp [L15],10
+ 00B6 B021              jnz L33
+ 00B8                   .dbline 85
+ 00B8           ;                               {
+ 00B8           ;                                       value=(((WORD)ser_databuf[n*2+2]<<8)+ser_databuf[n*2+3])&0x3FF;
+ 00B8                   .dbline 85
+ 00B8 5200              mov A,[X+0]
+ 00BA 64                asl A
+ 00BB 5300              mov [__r1],A
+ 00BD 0103              add A,<_ser_databuf+3
+ 00BF 5300              mov [__r3],A
+ 00C1 3E00              mvi A,[__r3]
+ 00C3 5300              mov [__r2],A
+ 00C5 060002            add [__r1],<_ser_databuf+2
+ 00C8 3E00              mvi A,[__r1]
+ 00CA 5300              mov [__r0],A
+ 00CC 5100              mov A,[__r2]
+ 00CE 5303              mov [L21+1],A
+ 00D0 5100              mov A,[__r0]
+ 00D2 2103              and A,3
+ 00D4 5302              mov [L21],A
+ 00D6                   .dbline 86
+ 00D6           ;                               }
+ 00D6 801F              xjmp L34
+ 00D8           L33:
+ 00D8                   .dbline 88
+ 00D8           ;                               else
+ 00D8           ;                               {
+ 00D8                   .dbline 89
+ 00D8           ;                                       value=(((WORD)ser_databuf[n*2+2]<<8)+ser_databuf[n*2+3])&0x7FF;
+ 00D8 5200              mov A,[X+0]
+ 00DA 64                asl A
+ 00DB 5300              mov [__r1],A
+ 00DD 0103              add A,<_ser_databuf+3
+ 00DF 5300              mov [__r3],A
+ 00E1 3E00              mvi A,[__r3]
+ 00E3 5300              mov [__r2],A
+ 00E5 060002            add [__r1],<_ser_databuf+2
+ 00E8 3E00              mvi A,[__r1]
+ 00EA 5300              mov [__r0],A
+ 00EC 5100              mov A,[__r2]
+ 00EE 5303              mov [L21+1],A
+ 00F0 5100              mov A,[__r0]
+ 00F2 2107              and A,7
+ 00F4 5302              mov [L21],A
+ 00F6                   .dbline 90
+ 00F6           ;                               }
+ 00F6           L34:
+ 00F6                   .dbline 93
+ 00F6           ;                               //PPM has resulution of 2000/1ms so 10 Bit datta (0 to 1024) needs to be multipleid by 2
+ 00F6           ;                               //best would be a linear scale like "Value=PPM_MIN + (value*(PPM_MAX-PPM_MIN))/(1<<Bits)" but that takes to mutch time.
+ 00F6           ;                               if (bits==10)
+ 00F6 3C000A            cmp [L15],10
+ 00F9 B023              jnz L39
+ 00FB                   .dbline 94
+ 00FB           ;                                       ppm_Data[chanal]=PPM_OUT_MIN_LEN+ value*2;
+ 00FB 5F0003            mov [__r1],[L21+1]
+ 00FE 5F0002            mov [__r0],[L21]
+ 0101 6500              asl [__r1]
+ 0103 6B00              rlc [__r0]
+ 0105 0600B8            add [__r1],-72
+ 0108 0E0007            adc [__r0],7
+ 010B 5F0001            mov [__r3],[L20]
+ 010E 6500              asl [__r3]
+ 0110 060000            add [__r3],<_ppm_Data
+ 0113 5100              mov A,[__r0]
+ 0115 3F00              mvi [__r3],A
+ 0117 5100              mov A,[__r1]
+ 0119 3F00              mvi [__r3],A
+ 011B 8019              xjmp L40
+ 011D           L39:
+ 011D                   .dbline 96
+ 011D           ;                               else 
+ 011D           ;                                       ppm_Data[chanal]=PPM_OUT_MIN_LEN+ value;
+ 011D 5103              mov A,[L21+1]
+ 011F 01B8              add A,-72
+ 0121 5300              mov [__r1],A
+ 0123 5102              mov A,[L21]
+ 0125 0907              adc A,7
+ 0127 5F0001            mov [__r3],[L20]
+ 012A 6500              asl [__r3]
+ 012C 060000            add [__r3],<_ppm_Data
+ 012F 3F00              mvi [__r3],A
+ 0131 5100              mov A,[__r1]
+ 0133 3F00              mvi [__r3],A
+ 0135           L40:
+ 0135                   .dbline 98
+ 0135           ;                               //limit to MIN / MAX
+ 0135           ;                               if (PPM_OUT_MAX_LEN<ppm_Data[chanal])
+ 0135 5F0001            mov [__r1],[L20]
+ 0138 6500              asl [__r1]
+ 013A 060000            add [__r1],<_ppm_Data
+ 013D 3E00              mvi A,[__r1]
+ 013F 5300              mov [__r0],A
+ 0141 3E00              mvi A,[__r1]
+ 0143 5300              mov [__r1],A
+ 0145 50B8              mov A,-72
+ 0147 1200              sub A,[__r1]
+ 0149 500F              mov A,15
+ 014B 1A00              sbb A,[__r0]
+ 014D D011              jnc L41
+ 014F           X5:
+ 014F                   .dbline 99
+ 014F           ;                                       ppm_Data[chanal]=PPM_OUT_MAX_LEN;
+ 014F 5F0001            mov [__r1],[L20]
+ 0152 6500              asl [__r1]
+ 0154 060000            add [__r1],<_ppm_Data
+ 0157 500F              mov A,15
+ 0159 3F00              mvi [__r1],A
+ 015B 50B8              mov A,-72
+ 015D 3F00              mvi [__r1],A
+ 015F           L41:
+ 015F                   .dbline 100
+ 015F           ;                               if (PPM_OUT_MIN_LEN>ppm_Data[chanal])
+ 015F 5F0001            mov [__r1],[L20]
+ 0162 6500              asl [__r1]
+ 0164 060000            add [__r1],<_ppm_Data
+ 0167 3E00              mvi A,[__r1]
+ 0169 5300              mov [__r0],A
+ 016B 3E00              mvi A,[__r1]
+ 016D 11B8              sub A,-72
+ 016F 5100              mov A,[__r0]
+ 0171 1907              sbb A,7
+ 0173 D011              jnc L43
+ 0175           X6:
+ 0175                   .dbline 101
+ 0175           ;                                       ppm_Data[chanal]=PPM_OUT_MIN_LEN;
+ 0175 5F0001            mov [__r1],[L20]
+ 0178 6500              asl [__r1]
+ 017A 060000            add [__r1],<_ppm_Data
+ 017D 5007              mov A,7
+ 017F 3F00              mvi [__r1],A
+ 0181 50B8              mov A,-72
+ 0183 3F00              mvi [__r1],A
+ 0185           L43:
+ 0185                   .dbline 102
+ 0185           ;                       }
+ 0185           L30:
+ 0185                   .dbline 103
+ 0185           ;               }
+ 0185           L23:
+ 0185                   .dbline 73
+ 0185 7700              inc [X+0]
+ 0187           L25:
+ 0187                   .dbline 73
+ 0187 3D0007            cmp [X+0],7
+ 018A CEF0              jc L22
+ 018C           X7:
+ 018C                   .dbline 104
+ 018C           ;               return 1;
+ 018C 5001              mov A,1
+ 018E 8003              xjmp L14
+ 0190           L18:
+ 0190                   .dbline 106
+ 0190           ;       }
+ 0190           ;       return 0;
+ 0190 5000              mov A,0
+ 0192                   .dbline -2
+ 0192           L14:
+ 0192 38FF              add SP,-1
+ 0194 20                pop X
+ 0195                   .dbline 0 ; func end
+ 0195 7F                ret
+ 0196                   .dbsym l n 0 c
+ 0196                   .dbend
+ 0196                   .dbfunc e DSM_CheckForReciver _DSM_CheckForReciver fV
+ 0196           ;          delay -> X+0
+ 0196           _DSM_CheckForReciver::
+ 0196                   .dbline -1
+ 0196 10                push X
+ 0197 4F                mov X,SP
+ 0198 3801              add SP,1
+ 019A                   .dbline 112
+ 019A           ; }
+ 019A           ; 
+ 019A           ; //check if reciver is connected 
+ 019A           ; //if we power up without reciver is connected then wait for reciver connected an enter bind mode
+ 019A           ; void DSM_CheckForReciver(void)
+ 019A           ; {
+ 019A                   .dbline 114
+ 019A           ;       //check for Bind Jumper
+ 019A           ;       PRT1DR&=~2; //Set output Low
+ 019A 4104FD            and REG[0x4],-3
+ 019D                   .dbline 115
+ 019D           ;       TimerWait_ms(1);
+ 019D 5001              mov A,1
+ 019F 08                push A
+ 01A0 7C0000            xcall _TimerWait_ms
+ 01A3 38FF              add SP,-1
+ 01A5                   .dbline 116
+ 01A5           ;       if (!(PRT1DR&1))
+ 01A5 5D04              mov A,REG[0x4]
+ 01A7 5300              mov [__r0],A
+ 01A9 470001            tst [__r0],1
+ 01AC B004              jnz L46
+ 01AE                   .dbline 118
+ 01AE           ;       {
+ 01AE           ;               BindMode=1;
+ 01AE                   .dbline 118
+ 01AE 550001            mov [_BindMode],1
+ 01B1                   .dbline 119
+ 01B1           ;       }
+ 01B1           L46:
+ 01B1                   .dbline 122
+ 01B1           ;       
+ 01B1           ;       //wait for a High on the input from the satelite reciver
+ 01B1           ;       PRT0DR&=~(1<<5);
+ 01B1 4100DF            and REG[0],-33
+ 01B4                   .dbline 123
+ 01B4           ;       {
+ 01B4                   .dbline 124
+ 01B4           ;               BYTE delay=0;
+ 01B4 560000            mov [X+0],0
+ 01B7                   .dbline 125
+ 01B7           ;               TimerWait_ms(10);       
+ 01B7 500A              mov A,10
+ 01B9 08                push A
+ 01BA 7C0000            xcall _TimerWait_ms
+ 01BD 38FF              add SP,-1
+ 01BF 8019              xjmp L49
+ 01C1           L48:
+ 01C1                   .dbline 127
+ 01C1           ;               while (!(PRT0DR&(1<<5)))  //wait for the satelite
+ 01C1           ;               {
+ 01C1                   .dbline 128
+ 01C1           ;                       TimerWait_ms(1);
+ 01C1 5001              mov A,1
+ 01C3 08                push A
+ 01C4 7C0000            xcall _TimerWait_ms
+ 01C7 38FF              add SP,-1
+ 01C9                   .dbline 129
+ 01C9           ;                       delay++;
+ 01C9 7700              inc [X+0]
+ 01CB                   .dbline 132
+ 01CB           ;                       //if we powered up without a connected reciver enter Bind mode
+ 01CB           ;                       //and wait for the reciver to connect
+ 01CB           ;                       if (!BindMode && delay>10)
+ 01CB 3C0000            cmp [_BindMode],0
+ 01CE B00A              jnz L51
+ 01D0 500A              mov A,10
+ 01D2 3B00              cmp A,[X+0]
+ 01D4 D004              jnc L51
+ 01D6           X8:
+ 01D6                   .dbline 134
+ 01D6           ;                       {
+ 01D6           ;                               BindMode=1;
+ 01D6                   .dbline 134
+ 01D6 550001            mov [_BindMode],1
+ 01D9                   .dbline 135
+ 01D9           ;                       }
+ 01D9           L51:
+ 01D9                   .dbline 136
+ 01D9           ;               }
+ 01D9           L49:
+ 01D9                   .dbline 126
+ 01D9 5D00              mov A,REG[0]
+ 01DB 5300              mov [__r0],A
+ 01DD 470020            tst [__r0],32
+ 01E0 AFE0              jz L48
+ 01E2                   .dbline 137
+ 01E2           ;       }
+ 01E2                   .dbline 139
+ 01E2           ;       
+ 01E2           ;       if (BindMode)
+ 01E2 3C0000            cmp [_BindMode],0
+ 01E5 A00F              jz L53
+ 01E7                   .dbline 141
+ 01E7           ;       {
+ 01E7           ;               TimerWait_ms(80);               
+ 01E7                   .dbline 141
+ 01E7 5050              mov A,80
+ 01E9 08                push A
+ 01EA 7C0000            xcall _TimerWait_ms
+ 01ED                   .dbline 142
+ 01ED           ;               Timer_GennerateBindPulses(9);
+ 01ED 5009              mov A,9
+ 01EF 08                push A
+ 01F0 7C0000            xcall _Timer_GennerateBindPulses
+ 01F3 38FE              add SP,-2
+ 01F5                   .dbline 143
+ 01F5           ;       }
+ 01F5           L53:
+ 01F5                   .dbline -2
+ 01F5           L45:
+ 01F5 38FF              add SP,-1
+ 01F7 20                pop X
+ 01F8                   .dbline 0 ; func end
+ 01F8 7F                ret
+ 01F9                   .dbsym l delay 0 c
+ 01F9                   .dbend

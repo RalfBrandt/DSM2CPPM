@@ -1,0 +1,68 @@
+Starting MAKE...
+creating project.mk 
+
+lib/counter8_1.asm
+
+lib/counter8_1int.asm
+
+lib/psocconfig.asm
+
+lib/psocconfigtbl.asm
+
+lib/psocgpioint.asm
+
+lib/pwm16_1.asm
+
+lib/pwm16_1int.asm
+
+lib/rx8_1.asm
+
+lib/rx8_1int.asm
+
+lib/rx8_1plus.asm
+
+./boot.asm
+
+Linking..
+
+symbol RX8_1_bReadRxStatus is unused
+
+symbol PWM16_1_wReadCounter is unused
+
+symbol RX8_1_cReadChar is unused
+
+symbol RX8_1_iReadChar is unused
+
+symbol RX8_1_Stop is unused
+
+symbol Counter8_1_Stop is unused
+
+symbol RX8_1_DisableInt is unused
+
+symbol Counter8_1_DisableInt is unused
+
+symbol PWM16_1_Stop is unused
+
+symbol RX8_1_bReadRxData is unused
+
+symbol PWM16_1_DisableInt is unused
+
+symbol PWM16_1_wReadPulseWidth is unused
+
+symbol Counter8_1_bReadCompareValue is unused
+
+symbol Counter8_1_bReadCounter is unused
+
+183 bytes unused code deleted
+
+1586 bytes before Code Compression, 1386 after. 1% reduction.
+
+  ROM 40% full. 1636 out of 4096 bytes used (does not include absolute areas).
+
+  RAM 24% full. 61 bytes used (does not include stack usage).
+
+Built with ICCM8C STD V7.05.00
+
+ 
+Sateliet_to_CPPMV7 - 0 error(s) 0 warning(s) 10:56:09
+

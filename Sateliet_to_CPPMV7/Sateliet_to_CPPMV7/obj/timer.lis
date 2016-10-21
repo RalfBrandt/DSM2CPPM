@@ -1,0 +1,256 @@
+                        .module timer.c
+                        .area text(rom, con, rel)
+ 0000                   .dbfile ./timer.c
+                        .area data(ram, con, rel)
+ 0000                   .dbfile ./timer.c
+ 0000           _systic::
+ 0000                   .blkb 2
+                        .area idata(rom,lit)
+ 0000 0000              .word 0
+                        .area data(ram, con, rel)
+ 0002                   .dbfile ./timer.c
+ 0002                   .dbfile E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~2\SATELI~1\SATELI~1\timer.c
+ 0002                   .dbsym e systic _systic i
+ 0002           _BindCount::
+ 0002                   .blkb 1
+                        .area idata(rom,lit)
+ 0002 00                .byte 0
+                        .area data(ram, con, rel)
+ 0003                   .dbfile E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~2\SATELI~1\SATELI~1\timer.c
+ 0003                   .dbsym e BindCount _BindCount c
+                        .area text(rom, con, rel)
+ 0000                   .dbfile E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~2\SATELI~1\SATELI~1\timer.c
+ 0000                   .dbfunc e TimerInit _TimerInit fV
+ 0000           _TimerInit::
+ 0000                   .dbline -1
+ 0000                   .dbline 17
+ 0000           ; /* this module implements the systimer
+ 0000           ; * the systic will be incremented once per ms
+ 0000           ; *also the timer is used to gennerate the bind pulses for the sttelite
+ 0000           ; *for that the hardware is reconfigured so that to serial input pin is connected to the timer output instead
+ 0000           ; */
+ 0000           ; #include <m8c.h>        // part specific constants and macros
+ 0000           ; #include "PSoCAPI.h"    // PSoC API definitions for all User Modules
+ 0000           ; #include "timer.h"
+ 0000           ; #include "serial.h"
+ 0000           ; 
+ 0000           ; WORD systic=0;   //will be incremented once per ms
+ 0000           ; BYTE BindCount=0;  //used to gnnerate the 120us bind pulses
+ 0000           ; 
+ 0000           ; 
+ 0000           ; //initialize system timer
+ 0000           ; void TimerInit(void )
+ 0000           ; {
+ 0000                   .dbline 19
+ 0000           ;       //enable interrupt
+ 0000           ;       M8C_EnableGInt; 
+ 0000 7101                      or  F, 01h
+ 0002           
+ 0002                   .dbline 20
+ 0002           ;       Counter8_1_EnableInt();  
+ 0002 10                push X
+ 0003 7C0000            xcall _Counter8_1_EnableInt
+ 0006                   .dbline 22
+ 0006           ;       //ser periode to one per ms
+ 0006           ;       Counter8_1_WritePeriod(125); //one TC per ms
+ 0006 507D              mov A,125
+ 0008 7C0000            xcall _Counter8_1_WritePeriod
+ 000B                   .dbline 23
+ 000B           ;       Counter8_1_WriteCompareValue(0);
+ 000B 5000              mov A,0
+ 000D 7C0000            xcall _Counter8_1_WriteCompareValue
+ 0010                   .dbline 25
+ 0010           ;       //start it
+ 0010           ;       Counter8_1_Start();
+ 0010 7C0000            xcall _Counter8_1_Start
+ 0013 20                pop X
+ 0014                   .dbline -2
+ 0014           L1:
+ 0014                   .dbline 0 ; func end
+ 0014 7F                ret
+ 0015                   .dbend
+ 0015                   .dbfunc e TimerConnectToPin _TimerConnectToPin fV
+ 0015           _TimerConnectToPin::
+ 0015                   .dbline -1
+ 0015                   .dbline 30
+ 0015           ; }
+ 0015           ; 
+ 0015           ; //connect the timer output to the I/O pin
+ 0015           ; void TimerConnectToPin(void)
+ 0015           ; {
+ 0015                   .dbline 32
+ 0015           ;       //switch pin connection to counter8_1 compare out
+ 0015           ;       PRT0DM0|=(1<<5);
+ 0015 7110              or F,0x10  ; iopage = 1
+ 0017 430020            or REG[0],32
+ 001A                   .dbline 34
+ 001A           ;       //change driver Mode to Output
+ 001A           ;       PRT0DM1&=~(1<<5);
+ 001A 4101DF            and REG[0x1],-33
+ 001D                   .dbline -2
+ 001D 70CF              and F,0xCF      ; iopage = 0
+ 001F           L2:
+ 001F                   .dbline 0 ; func end
+ 001F 7F                ret
+ 0020                   .dbend
+ 0020                   .dbfunc e Timer_GennerateBindPulses _Timer_GennerateBindPulses fV
+ 0020           ;         Pulese -> X-4
+ 0020           _Timer_GennerateBindPulses::
+ 0020                   .dbline -1
+ 0020 10                push X
+ 0021 4F                mov X,SP
+ 0022                   .dbline 40
+ 0022           ;       //set number of bind pulses to gennerate
+ 0022           ; }
+ 0022           ; 
+ 0022           ; //gennerate the bind pulses for the satelite reciver
+ 0022           ; void Timer_GennerateBindPulses(BYTE Pulese)
+ 0022           ; {
+ 0022                   .dbline 41
+ 0022           ;       TimerConnectToPin();
+ 0022 9FF1              xcall _TimerConnectToPin
+ 0024                   .dbline 42
+ 0024           ;       BindCount=Pulese+1;
+ 0024 52FC              mov A,[X-4]
+ 0026 0101              add A,1
+ 0028 5302              mov [_BindCount],A
+ 002A           L4:
+ 002A                   .dbline 43
+ 002A           ;       while (BindCount); //wait till done
+ 002A           L5:
+ 002A                   .dbline 43
+ 002A 3C0200            cmp [_BindCount],0
+ 002D BFFC              jnz L4
+ 002F                   .dbline 45
+ 002F           ;       //waite a bite more
+ 002F           ;       TimerWait_ms(100);
+ 002F 5064              mov A,100
+ 0031 08                push A
+ 0032 9007              xcall _TimerWait_ms
+ 0034 38FF              add SP,-1
+ 0036                   .dbline 46
+ 0036           ;       SerialConnectToPin();
+ 0036 7C0000            xcall _SerialConnectToPin
+ 0039                   .dbline -2
+ 0039           L3:
+ 0039 20                pop X
+ 003A                   .dbline 0 ; func end
+ 003A 7F                ret
+ 003B                   .dbsym l Pulese -4 c
+ 003B                   .dbend
+ 003B                   .dbfunc e TimerWait_ms _TimerWait_ms fV
+ 003B           ;           time -> X+0
+ 003B           ;             ms -> X-4
+ 003B           _TimerWait_ms::
+ 003B                   .dbline -1
+ 003B 10                push X
+ 003C 4F                mov X,SP
+ 003D 3802              add SP,2
+ 003F                   .dbline 51
+ 003F           ; }
+ 003F           ; 
+ 003F           ; //a delay
+ 003F           ; void TimerWait_ms(BYTE ms)
+ 003F           ; {
+ 003F                   .dbline 53
+ 003F           ; WORD time;
+ 003F           ;       time = TMR_GET_SYSTIC();
+ 003F 5101              mov A,[_systic+1]
+ 0041 5401              mov [X+1],A
+ 0043 5100              mov A,[_systic]
+ 0045 5400              mov [X+0],A
+ 0047           L8:
+ 0047                   .dbline 54
+ 0047           ;       while (TMR_GET_TIME_DELTA(time)<ms);
+ 0047           L9:
+ 0047                   .dbline 54
+ 0047 52FC              mov A,[X-4]
+ 0049 5300              mov [__r1],A
+ 004B 550000            mov [__r0],0
+ 004E 5101              mov A,[_systic+1]
+ 0050 1301              sub A,[X+1]
+ 0052 5300              mov [__r3],A
+ 0054 5100              mov A,[_systic]
+ 0056 1B00              sbb A,[X+0]
+ 0058 5300              mov [__r2],A
+ 005A 5100              mov A,[__r3]
+ 005C 1200              sub A,[__r1]
+ 005E 5100              mov A,[__r2]
+ 0060 1A00              sbb A,[__r0]
+ 0062 CFE4              jc L8
+ 0064           X0:
+ 0064                   .dbline -2
+ 0064           L7:
+ 0064 38FE              add SP,-2
+ 0066 20                pop X
+ 0067                   .dbline 0 ; func end
+ 0067 7F                ret
+ 0068                   .dbsym l time 0 i
+ 0068                   .dbsym l ms -4 c
+ 0068                   .dbend
+ 0068                   .dbfunc e TMR8_1_Interrupt _TMR8_1_Interrupt fV
+ 0068           _TMR8_1_Interrupt::
+ 0068                   .dbline -1
+ 0068                   .dbline 58
+ 0068           ; }
+ 0068           ; 
+ 0068           ; void TMR8_1_Interrupt(void )
+ 0068           ; {
+ 0068                   .dbline 60
+ 0068           ;       //the bind pulses are gennerated by the timer
+ 0068           ;       if (BindCount)
+ 0068 3C0200            cmp [_BindCount],0
+ 006B A022              jz L12
+ 006D                   .dbline 62
+ 006D           ;       {
+ 006D           ;               Counter8_1_WriteCompareValue(15); //120us
+ 006D                   .dbline 62
+ 006D 10                push X
+ 006E 500F              mov A,15
+ 0070 7C0000            xcall _Counter8_1_WriteCompareValue
+ 0073                   .dbline 63
+ 0073           ;               Counter8_1_WritePeriod(30); //240 us
+ 0073 501E              mov A,30
+ 0075 7C0000            xcall _Counter8_1_WritePeriod
+ 0078 20                pop X
+ 0079                   .dbline 64
+ 0079           ;               BindCount--;
+ 0079 7A02              dec [_BindCount]
+ 007B                   .dbline 65
+ 007B           ;               if(!BindCount)
+ 007B 3C0200            cmp [_BindCount],0
+ 007E B014              jnz L13
+ 0080                   .dbline 67
+ 0080           ;               { //back to normal operation 
+ 0080           ;                       Counter8_1_WriteCompareValue(0);
+ 0080                   .dbline 67
+ 0080 10                push X
+ 0081 5000              mov A,0
+ 0083 7C0000            xcall _Counter8_1_WriteCompareValue
+ 0086                   .dbline 68
+ 0086           ;                       Counter8_1_WritePeriod(250);
+ 0086 50FA              mov A,-6
+ 0088 7C0000            xcall _Counter8_1_WritePeriod
+ 008B 20                pop X
+ 008C                   .dbline 69
+ 008C           ;               }
+ 008C                   .dbline 70
+ 008C           ;       }
+ 008C 8006              xjmp L13
+ 008E           L12:
+ 008E                   .dbline 72
+ 008E           ;       else 
+ 008E           ;       {
+ 008E                   .dbline 73
+ 008E           ;               systic++;
+ 008E 7601              inc [_systic+1]
+ 0090 0E0000            adc [_systic],0
+ 0093                   .dbline 75
+ 0093           ;               
+ 0093           ;       }
+ 0093           L13:
+ 0093                   .dbline -2
+ 0093           L11:
+ 0093                   .dbline 0 ; func end
+ 0093 7F                ret
+ 0094                   .dbend
