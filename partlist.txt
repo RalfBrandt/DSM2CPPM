@@ -1,0 +1,4 @@
+1	x 	PCB
+2	x	ceramic capacitor 1uF 0805
+1	x	Voltage Reg. MPC1703CB or TS9011SCX
+1	x	Microcontroler CY8C21123-24SXI
