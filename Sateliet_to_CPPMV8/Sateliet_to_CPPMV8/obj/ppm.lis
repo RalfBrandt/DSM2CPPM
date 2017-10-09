@@ -1,0 +1,371 @@
+                        .module ppm.c
+                        .area text(rom, con, rel)
+ 0000                   .dbfile ./ppm.c
+                        .area data(ram, con, rel)
+ 0000                   .dbfile ./ppm.c
+ 0000           _ppm_Nr::
+ 0000                   .blkb 1
+                        .area idata(rom,lit)
+ 0000 00                .byte 0
+                        .area data(ram, con, rel)
+ 0001                   .dbfile ./ppm.c
+ 0001                   .dbfile E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\ppm.c
+ 0001                   .dbsym e ppm_Nr _ppm_Nr c
+ 0001           _ppm_Run::
+ 0001                   .blkb 1
+                        .area idata(rom,lit)
+ 0001 00                .byte 0
+                        .area data(ram, con, rel)
+ 0002                   .dbfile E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\ppm.c
+ 0002                   .dbsym e ppm_Run _ppm_Run c
+                        .area text(rom, con, rel)
+ 0000                   .dbfile E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\ppm.c
+ 0000                   .dbfunc e ppm_Init _ppm_Init fV
+ 0000           ;              n -> X+0
+ 0000           _ppm_Init::
+ 0000                   .dbline -1
+ 0000 10                push X
+ 0001 4F                mov X,SP
+ 0002 3802              add SP,2
+ 0004                   .dbline 26
+ 0004           ; /*
+ 0004           ; *PPM.C
+ 0004           ; *A 16 Bit PWM module  is used to gennerate the PPM train
+ 0004           ; *The PWM actually gennerates an inverted CPPM __|_|_|_|_|_|_|_|_|___|_|_|_|_|_|_|_|_|___|_
+ 0004           ; *this has the advantage that the pulse width can stay constant, only the periode has to be changed
+ 0004           ; *on everey compare match interrupt the periode value for the next chanel is loaded
+ 0004           ; *the last chanal value has an extra large value and is used to gennerate the sync gap
+ 0004           ; *the fist ppm train after power up is wrong so dynamic reconfiguration is used to disconect the PWM from the output PIN
+ 0004           ; *this mecanism is also used the start / stop the PPM output loading a 1 to ppm_Run will output one pulse train
+ 0004           ; *between the last pulse and the sync pulse an IO interrupt on rising edge is enabled , in the interrupt rotine 
+ 0004           ; *of this ppm_Run is cleared and the PWM is disdonected from the PIN, the PWM will stay in state PPM_PULSE_COUNT+1
+ 0004           ; * and wait that the main program will set ppm_Run again, that will start the next cycle
+ 0004           ; */
+ 0004           ; 
+ 0004           ; #include <m8c.h>        // part specific constants and macros
+ 0004           ; #include "PSoCAPI.h"    // PSoC API definitions for all User Modules
+ 0004           ; #include "ppm.h"
+ 0004           ; 
+ 0004           ; 
+ 0004           ; volatile WORD ppm_Data[PPM_PULSE_COUNT];      //the pulse len valune for the chanales
+ 0004           ; volatile BYTE ppm_Nr=0;//the chanal counter
+ 0004           ; volatile BOOL ppm_Run=0;//start one pulse train
+ 0004           ; 
+ 0004           ; //initialize PPM output
+ 0004           ; void ppm_Init(void )
+ 0004           ; {
+ 0004                   .dbline 30
+ 0004           ;       
+ 0004           ; int n;
+ 0004           ;       //Init PPM_DATA array
+ 0004           ;       for (n=0;n<PPM_PULSE_COUNT;n++)
+ 0004 560100            mov [X+1],0
+ 0007 560000            mov [X+0],0
+ 000A           L2:
+ 000A                   .dbline 31
+ 000A           ;       {       //set to center
+ 000A                   .dbline 32
+ 000A           ;               ppm_Data[n]=PPM_OUT_CENTER_LEN;
+ 000A 5201              mov A,[X+1]
+ 000C 64                asl A
+ 000D 0100              add A,<_ppm_Data
+ 000F 5300              mov [__r1],A
+ 0011 500B              mov A,11
+ 0013 3F00              mvi [__r1],A
+ 0015 50B8              mov A,-72
+ 0017 3F00              mvi [__r1],A
+ 0019                   .dbline 33
+ 0019           ;       }
+ 0019           L3:
+ 0019                   .dbline 30
+ 0019 7701              inc [X+1]
+ 001B 0F0000            adc [X+0],0
+ 001E                   .dbline 30
+ 001E 5201              mov A,[X+1]
+ 0020 1108              sub A,8
+ 0022 5200              mov A,[X+0]
+ 0024 3180              xor A,-128
+ 0026 1980              sbb A,(0 ^ 0x80)
+ 0028 CFE1              jc L2
+ 002A           X0:
+ 002A                   .dbline 35
+ 002A           ;       //enable glogal interrupts
+ 002A           ;       M8C_EnableGInt; 
+ 002A 7101                      or  F, 01h
+ 002C           
+ 002C                   .dbline 37
+ 002C           ;       //enable compare match interrupt of the PWM
+ 002C           ;       PWM16_1_EnableInt();
+ 002C 10                push X
+ 002D 7C0000            xcall _PWM16_1_EnableInt
+ 0030 20                pop X
+ 0031                   .dbline 40
+ 0031           ;       //enable GPOI Interrupts
+ 0031           ;       //we need that to trigger on falling egde of "compare true"
+ 0031           ;       M8C_EnableIntMask(INT_MSK0, INT_MSK0_GPIO);
+ 0031 43E020            or REG[0xe0],32
+ 0034                   .dbline 42
+ 0034           ;       //pulse widht is actually the small gap between the PPM pulses
+ 0034           ;       PWM16_1_WritePulseWidth(PPM_OUT_PULSE_GAP_LEN_US);
+ 0034 10                push X
+ 0035 5703              mov X,3
+ 0037 5020              mov A,32
+ 0039 7C0000            xcall _PWM16_1_WritePulseWidth
+ 003C 20                pop X
+ 003D                   .dbline 44
+ 003D           ;       //disable IRQ on Port Pin, we do nt need iot jet
+ 003D           ;       Port_0_4_IntEn_ADDR&=~(1<<4); 
+ 003D 4101EF            and REG[0x1],-17
+ 0040                   .dbline 46
+ 0040           ;       //disconnect the PIN from the PWM and  set the pin to High
+ 0040           ;       RDI0LT0|=0x3;
+ 0040 43B303            or REG[0xb3],3
+ 0043                   .dbline 48
+ 0043           ;       //init pulse counter, will loop thru the canales
+ 0043           ;       ppm_Nr=0;               
+ 0043 550000            mov [_ppm_Nr],0
+ 0046                   .dbline 50
+ 0046           ;       //set a initial pulse len, just to have somthing in ther will be change in the interrupt service
+ 0046           ;       PWM16_1_WritePeriod(PPM_OUT_SYNC_PULSE_LEN);
+ 0046 10                push X
+ 0047 5717              mov X,23
+ 0049 5070              mov A,112
+ 004B 7C0000            xcall _PWM16_1_WritePeriod
+ 004E                   .dbline 52
+ 004E           ;       //start the PWM Module
+ 004E           ;       PWM16_1_Start();
+ 004E 7C0000            xcall _PWM16_1_Start
+ 0051 20                pop X
+ 0052                   .dbline -2
+ 0052           L1:
+ 0052 38FE              add SP,-2
+ 0054 20                pop X
+ 0055                   .dbline 0 ; func end
+ 0055 7F                ret
+ 0056                   .dbsym l n 0 I
+ 0056                   .dbend
+ 0056                   .dbfunc e PWM16_1_CMP_ISR _PWM16_1_CMP_ISR fV
+ 0056           _PWM16_1_CMP_ISR::
+ 0056                   .dbline -1
+ 0056 08                push A
+ 0057 5100              mov A,[__r0]
+ 0059 08                push A
+ 005A 5100              mov A,[__r1]
+ 005C 08                push A
+ 005D 5100              mov A,[__r2]
+ 005F 08                push A
+ 0060 5100              mov A,[__r3]
+ 0062 08                push A
+ 0063 5100              mov A,[__r4]
+ 0065 08                push A
+ 0066 5100              mov A,[__r5]
+ 0068 08                push A
+ 0069 5100              mov A,[__r6]
+ 006B 08                push A
+ 006C 5100              mov A,[__r7]
+ 006E 08                push A
+ 006F 5100              mov A,[__r8]
+ 0071 08                push A
+ 0072 5100              mov A,[__r9]
+ 0074 08                push A
+ 0075 5100              mov A,[__r10]
+ 0077 08                push A
+ 0078 5100              mov A,[__r11]
+ 007A 08                push A
+ 007B 5100              mov A,[__rX]
+ 007D 08                push A
+ 007E 5100              mov A,[__rY]
+ 0080 08                push A
+ 0081 5100              mov A,[__rZ]
+ 0083 08                push A
+ 0084                   .dbline 66
+ 0084           ; }//END OFF ppm_Init
+ 0084           ; 
+ 0084           ; 
+ 0084           ; 
+ 0084           ; /*inerrupt service routine for the PWM module
+ 0084           ; *will be called on compare match
+ 0084           ; *-load pulse len of the next PPM pulse
+ 0084           ; *- increase pulse counter
+ 0084           ; *-after the last pulse (before the sync pulse is outputed enable GPOI interrupt on rising egde
+ 0084           ; *-when done wait for ppm_Run to go on again, stay in a small loop for that time
+ 0084           ; */
+ 0084           ; #pragma interrupt_handler PWM16_1_CMP_ISR
+ 0084           ; void PWM16_1_CMP_ISR(void )
+ 0084           ; {
+ 0084                   .dbline 68
+ 0084           ;       //if we are done wait for start (ppm_Run==1)
+ 0084           ;       if (ppm_Nr==PPM_PULSE_COUNT+1)
+ 0084 3C0009            cmp [_ppm_Nr],9
+ 0087 B022              jnz L7
+ 0089                   .dbline 70
+ 0089           ;       {
+ 0089           ;               if (ppm_Run)
+ 0089                   .dbline 70
+ 0089 3C0100            cmp [_ppm_Run],0
+ 008C A012              jz L9
+ 008E                   .dbline 72
+ 008E           ;               { //continue with next Block of pulses
+ 008E           ;                       RDI0LT0&=~0x3;  //reconect i/O PIN to PWM
+ 008E                   .dbline 72
+ 008E 41B3FC            and REG[0xb3],-4
+ 0091                   .dbline 73
+ 0091           ;                       ppm_Nr=1;//reset counter
+ 0091 550001            mov [_ppm_Nr],1
+ 0094                   .dbline 74
+ 0094           ;                       PWM16_1_WritePeriod(ppm_Data[0]);//load pulse len of first chanal
+ 0094 10                push X
+ 0095 5800              mov X,[_ppm_Data]
+ 0097 5101              mov A,[_ppm_Data+1]
+ 0099 7C0000            xcall _PWM16_1_WritePeriod
+ 009C 20                pop X
+ 009D                   .dbline 75
+ 009D           ;               }
+ 009D 8039              xjmp L8
+ 009F           L9:
+ 009F                   .dbline 77
+ 009F           ;               else//continue waiting
+ 009F           ;                       PWM16_1_WritePeriod(PPM_OUT_PULSE_GAP_LEN_US+10); //continue waiting
+ 009F 10                push X
+ 00A0 5703              mov X,3
+ 00A2 502A              mov A,42
+ 00A4 7C0000            xcall _PWM16_1_WritePeriod
+ 00A7 20                pop X
+ 00A8                   .dbline 78
+ 00A8           ;       }
+ 00A8 802E              xjmp L8
+ 00AA           L7:
+ 00AA                   .dbline 81
+ 00AA           ;       //load pulse len of next chanal
+ 00AA           ;       else 
+ 00AA           ;       {       //check if that is the last chanal is done
+ 00AA                   .dbline 82
+ 00AA           ;               if(ppm_Nr==PPM_PULSE_COUNT)
+ 00AA 3C0008            cmp [_ppm_Nr],8
+ 00AD B011              jnz L11
+ 00AF                   .dbline 84
+ 00AF           ;               {
+ 00AF           ;                       ppm_Nr++;
+ 00AF                   .dbline 84
+ 00AF 7600              inc [_ppm_Nr]
+ 00B1                   .dbline 85
+ 00B1           ;                       PWM16_1_WritePeriod(PPM_OUT_SYNC_PULSE_LEN); 
+ 00B1 10                push X
+ 00B2 5717              mov X,23
+ 00B4 5070              mov A,112
+ 00B6 7C0000            xcall _PWM16_1_WritePeriod
+ 00B9 20                pop X
+ 00BA                   .dbline 86
+ 00BA           ;                       Port_0_4_IntEn_ADDR|=(1<<4);    //enable pin irq
+ 00BA 430110            or REG[0x1],16
+ 00BD                   .dbline 87
+ 00BD           ;               }
+ 00BD 8019              xjmp L12
+ 00BF           L11:
+ 00BF                   .dbline 89
+ 00BF           ;               else 
+ 00BF           ;               {
+ 00BF                   .dbline 90
+ 00BF           ;                       PWM16_1_WritePeriod(ppm_Data[ppm_Nr++]); 
+ 00BF 5F0000            mov [__r1],[_ppm_Nr]
+ 00C2 060001            add [_ppm_Nr],1
+ 00C5 6500              asl [__r1]
+ 00C7 060000            add [__r1],<_ppm_Data
+ 00CA 3E00              mvi A,[__r1]
+ 00CC 5300              mov [__r0],A
+ 00CE 3E00              mvi A,[__r1]
+ 00D0 10                push X
+ 00D1 5800              mov X,[__r0]
+ 00D3 7C0000            xcall _PWM16_1_WritePeriod
+ 00D6 20                pop X
+ 00D7                   .dbline 91
+ 00D7           ;               }
+ 00D7           L12:
+ 00D7                   .dbline 92
+ 00D7           ;       }
+ 00D7           L8:
+ 00D7                   .dbline -2
+ 00D7           L6:
+ 00D7 18                pop A
+ 00D8 5300              mov [__rZ],A
+ 00DA 18                pop A
+ 00DB 5300              mov [__rY],A
+ 00DD 18                pop A
+ 00DE 5300              mov [__rX],A
+ 00E0 18                pop A
+ 00E1 5300              mov [__r11],A
+ 00E3 18                pop A
+ 00E4 5300              mov [__r10],A
+ 00E6 18                pop A
+ 00E7 5300              mov [__r9],A
+ 00E9 18                pop A
+ 00EA 5300              mov [__r8],A
+ 00EC 18                pop A
+ 00ED 5300              mov [__r7],A
+ 00EF 18                pop A
+ 00F0 5300              mov [__r6],A
+ 00F2 18                pop A
+ 00F3 5300              mov [__r5],A
+ 00F5 18                pop A
+ 00F6 5300              mov [__r4],A
+ 00F8 18                pop A
+ 00F9 5300              mov [__r3],A
+ 00FB 18                pop A
+ 00FC 5300              mov [__r2],A
+ 00FE 18                pop A
+ 00FF 5300              mov [__r1],A
+ 0101 18                pop A
+ 0102 5300              mov [__r0],A
+ 0104 18                pop A
+ 0105                   .dbline 0 ; func end
+ 0105 7E                reti
+ 0106                   .dbend
+ 0106                   .dbfunc e PPM_GPIO_ISR _PPM_GPIO_ISR fV
+ 0106           _PPM_GPIO_ISR::
+ 0106                   .dbline -1
+ 0106 08                push A
+ 0107 5100              mov A,[__r0]
+ 0109 08                push A
+ 010A                   .dbline 98
+ 010A           ; }//END OFF PWM16_1_CMP_ISR
+ 010A           ; 
+ 010A           ; //called on a GPIO interrupt
+ 010A           ; #pragma interrupt_handler PPM_GPIO_ISR
+ 010A           ; void PPM_GPIO_ISR(void )
+ 010A           ; {
+ 010A                   .dbline 99
+ 010A           ;       if (PRT0DR&(1<<4)) //Check if PPM output pin went high
+ 010A 5D00              mov A,REG[0]
+ 010C 5300              mov [__r0],A
+ 010E 470010            tst [__r0],16
+ 0111 A00D              jz L14
+ 0113                   .dbline 101
+ 0113           ;       { //we are done 
+ 0113           ;       PRT0DR^=(1<<2);
+ 0113                   .dbline 101
+ 0113 450004            xor REG[0],4
+ 0116                   .dbline 102
+ 0116           ;               ppm_Run=0;              //signal that we are done
+ 0116 550100            mov [_ppm_Run],0
+ 0119                   .dbline 103
+ 0119           ;               Port_0_4_IntEn_ADDR&=~(1<<4);   //disable pin irq
+ 0119 4101EF            and REG[0x1],-17
+ 011C                   .dbline 104
+ 011C           ;               RDI0LT0|=0x3;   //disconect IO pin from PWM and set to High
+ 011C 43B303            or REG[0xb3],3
+ 011F                   .dbline 105
+ 011F           ;       }
+ 011F           L14:
+ 011F                   .dbline -2
+ 011F           L13:
+ 011F 18                pop A
+ 0120 5300              mov [__r0],A
+ 0122 18                pop A
+ 0123                   .dbline 0 ; func end
+ 0123 7E                reti
+ 0124                   .dbend
+                        .area bss(ram, con, rel)
+ 0000                   .dbfile E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\ppm.c
+ 0000           _ppm_Data::
+ 0000                   .blkb 16
+ 0010                   .dbsym e ppm_Data _ppm_Data A[16:8]i

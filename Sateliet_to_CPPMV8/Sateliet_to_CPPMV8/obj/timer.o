@@ -1,0 +1,116 @@
+XH
+H 3 areas 10 global symbols
+M timer.c
+S _Counter8_1_WriteCompareValue Ref0000
+S __r0 Ref0000
+S __r1 Ref0000
+S __r2 Ref0000
+S __r3 Ref0000
+S _SerialConnectToPin Ref0000
+S _Counter8_1_Start Ref0000
+S _Counter8_1_WritePeriod Ref0000
+S _Counter8_1_EnableInt Ref0000
+A text size 94 flags 0
+dbfile ./timer.c
+dbfile E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\timer.c
+dbfunc e TimerInit 0 fV
+dbline FFFFFFFF 0
+dbline 11 0
+dbline 13 0
+dbline 14 2
+dbline 16 6
+dbline 17 B
+dbline 19 10
+dbline FFFFFFFE 14
+dbline 0 14
+dbfunc e TimerConnectToPin 15 fV
+dbline FFFFFFFF 15
+dbline 1E 15
+dbline 20 15
+dbline 22 1A
+dbline FFFFFFFE 1D
+dbline 0 1F
+dbfunc e Timer_GennerateBindPulses 20 fV
+dbsym l Pulese FFFFFFFC c
+dbline FFFFFFFF 20
+dbline 28 22
+dbline 29 22
+dbline 2A 24
+dbline 2B 2A
+dbline 2B 2A
+dbline 2D 2F
+dbline 2E 36
+dbline FFFFFFFE 39
+dbline 0 3A
+dbfunc e TimerWait_ms 3B fV
+dbsym l time 0 i
+dbsym l ms FFFFFFFC c
+dbline FFFFFFFF 3B
+dbline 33 3F
+dbline 35 3F
+dbline 36 47
+dbline 36 47
+dbline FFFFFFFE 64
+dbline 0 67
+dbfunc e TMR8_1_Interrupt 68 fV
+dbline FFFFFFFF 68
+dbline 3A 68
+dbline 3C 68
+dbline 3E 6D
+dbline 3E 6D
+dbline 3F 73
+dbline 40 79
+dbline 41 7B
+dbline 43 80
+dbline 43 80
+dbline 44 86
+dbline 45 8C
+dbline 46 8C
+dbline 48 8E
+dbline 49 8E
+dbline 4B 93
+dbline FFFFFFFE 93
+dbline 0 93
+S _TimerConnectToPin Def0015
+S _TimerWait_ms Def003B
+S _TMR8_1_Interrupt Def0068
+S _Timer_GennerateBindPulses Def0020
+S _TimerInit Def0000
+A data size 3 flags 20
+dbfile ./timer.c
+dbfile E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\timer.c
+dbsym e systic 0 i
+dbsym e BindCount 2 c
+S _BindCount Def0002
+S _systic Def0000
+A idata size 3 flags 1
+T 00 00 00 00
+R 00 00 00 02
+T 00 02 00
+R 00 00 00 02
+T 00 00 71 01 10 7C 00 00 50 7D 7C 00 00 50 00 7C
+R 00 00 00 00 02 06 00 08 02 0B 00 07
+T 00 0E 00 00 7C 00 00 20 7F 71 10 43 00 20 41 01
+R 00 00 00 00 02 02 00 00 02 05 00 06
+T 00 1C DF 70 CF 7F 10 4F 9F F1 52 FC 01 01 53
+R 00 00 00 00
+T 00 29 00 02 3C 00 02 00 BF FC 50 64 08 90 07 38
+R 00 00 00 00 01 02 00 01 01 05 00 01
+T 00 35 FF 7C 00 00 20 7F 10 4F 38 02 51 00 01 54
+R 00 00 00 00 02 04 00 05 01 0D 00 01
+T 00 42 01 51 00 00 54 00 52 FC 53 00 00 55 00 00
+R 00 00 00 00 01 04 00 01 03 0B 00 02 03 0E 00 01
+T 00 4D 00 51 00 01 13 01 53 00 00 51 00 00 1B 00
+R 00 00 00 00 01 04 00 01 03 09 00 04 01 0C 00 01
+T 00 58 53 00 00 51 00 00 12 00 00 51
+R 00 00 00 00 03 03 00 03 03 06 00 04 03 09 00 02
+T 00 5F 00 00 1A 00 00 CF E4 38 FE 20 7F 3C 00 02
+R 00 00 00 00 03 02 00 03 03 05 00 01 01 0E 00 01
+T 00 6A 00 A0 22 10 50 0F 7C 00 00 50 1E 7C 00 00
+R 00 00 00 00 02 09 00 00 02 0E 00 07
+T 00 78 20 7A 00 02 3C 00 02 00 B0 14 10 50 00 7C
+R 00 00 00 00 01 04 00 01 01 07 00 01
+T 00 84 00 00 50 FA 7C 00 00 20 80 06 76 00 01 0E
+R 00 00 00 00 02 02 00 00 02 07 00 07 01 0D 00 01
+T 00 91 00 00 00 7F
+R 00 00 00 00 01 02 00 01

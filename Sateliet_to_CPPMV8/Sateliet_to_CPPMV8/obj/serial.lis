@@ -1,0 +1,388 @@
+                        .module serial.c
+                        .area text(rom, con, rel)
+ 0000                   .dbfile ./serial.c
+                        .area data(ram, con, rel)
+ 0000                   .dbfile ./serial.c
+ 0000           _ser_idx::
+ 0000                   .blkb 1
+                        .area idata(rom,lit)
+ 0000 00                .byte 0
+                        .area data(ram, con, rel)
+ 0001                   .dbfile ./serial.c
+ 0001                   .dbfile E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\serial.c
+ 0001                   .dbsym e ser_idx _ser_idx c
+ 0001           _ser_status::
+ 0001                   .blkb 1
+                        .area idata(rom,lit)
+ 0001 00                .byte 0
+                        .area data(ram, con, rel)
+ 0002                   .dbfile E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\serial.c
+ 0002                   .dbsym e ser_status _ser_status c
+ 0002           _ser_to::
+ 0002                   .blkb 1
+                        .area idata(rom,lit)
+ 0002 00                .byte 0
+                        .area data(ram, con, rel)
+ 0003                   .dbfile E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\serial.c
+ 0003                   .dbsym e ser_to _ser_to c
+                        .area text(rom, con, rel)
+ 0000                   .dbfile E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\serial.c
+ 0000                   .dbfunc e SerialRX_Init _SerialRX_Init fV
+ 0000           ;              n -> X+0
+ 0000           _SerialRX_Init::
+ 0000                   .dbline -1
+ 0000 10                push X
+ 0001 4F                mov X,SP
+ 0002 3802              add SP,2
+ 0004                   .dbline 21
+ 0004           ; /*this module contains the code for serial reciving the data from the sattilie reciver
+ 0004           ; * a Buffer of 16 byte ist used to store recived data
+ 0004           ; * most work is doen within the interrupt sevice routine
+ 0004           ; *datarate is set in the chip design to 115200 by the devider for VC3
+ 0004           ; *the timer module will call the ser_Tic function once per ms
+ 0004           ; *if for 5ms no more chars are recived the index is reset to zerro
+ 0004           ; */
+ 0004           ; 
+ 0004           ; #include <m8c.h>        // part specific constants and macros
+ 0004           ; #include "PSoCAPI.h"    // PSoC API definitions for all User Modules
+ 0004           ; #include "serial.h"
+ 0004           ; 
+ 0004           ; 
+ 0004           ; BYTE ser_databuf[SER_BUFFER_SIZE]; //the buffer to hold the recived data
+ 0004           ; BYTE ser_idx=0;                                               //index into buffer
+ 0004           ; BYTE ser_status=0;                                    //reciver status
+ 0004           ; BYTE ser_to=0;                                                //timeout variable to determin end of transmision
+ 0004           ; 
+ 0004           ; //initialize the RX8 module
+ 0004           ; void SerialRX_Init(void )
+ 0004           ; {
+ 0004                   .dbline 23
+ 0004           ;       int n;
+ 0004           ;       RX8_1_EnableInt(); //enable hardwar
+ 0004 10                push X
+ 0005 7C0000            xcall _RX8_1_EnableInt
+ 0008 20                pop X
+ 0009                   .dbline 25
+ 0009           ;       //clear buffer
+ 0009           ;       for (n=0;n<16;n++)
+ 0009 560100            mov [X+1],0
+ 000C 560000            mov [X+0],0
+ 000F           L2:
+ 000F                   .dbline 26
+ 000F           ;               ser_databuf[n]=0;
+ 000F 5201              mov A,[X+1]
+ 0011 0101              add A,<_ser_databuf
+ 0013 5300              mov [__r1],A
+ 0015 5000              mov A,0
+ 0017 3F00              mvi [__r1],A
+ 0019           L3:
+ 0019                   .dbline 25
+ 0019 7701              inc [X+1]
+ 001B 0F0000            adc [X+0],0
+ 001E                   .dbline 25
+ 001E 5201              mov A,[X+1]
+ 0020 1110              sub A,16
+ 0022 5200              mov A,[X+0]
+ 0024 3180              xor A,-128
+ 0026 1980              sbb A,(0 ^ 0x80)
+ 0028 CFE6              jc L2
+ 002A           X0:
+ 002A                   .dbline 28
+ 002A           ;       //set index to 0
+ 002A           ;       ser_idx=0;
+ 002A 550000            mov [_ser_idx],0
+ 002D                   .dbline 30
+ 002D           ;       //enable interrupts
+ 002D           ;       M8C_EnableGInt;
+ 002D 7101                      or  F, 01h
+ 002F           
+ 002F                   .dbline 31
+ 002F           ;       RX8_1_EnableInt();
+ 002F 10                push X
+ 0030 7C0000            xcall _RX8_1_EnableInt
+ 0033                   .dbline 33
+ 0033           ;       //start reciving
+ 0033           ;       RX8_1_Start(RX8_PARITY_NONE);
+ 0033 5000              mov A,0
+ 0035 7C0000            xcall _RX8_1_Start
+ 0038 20                pop X
+ 0039                   .dbline -2
+ 0039           L1:
+ 0039 38FE              add SP,-2
+ 003B 20                pop X
+ 003C                   .dbline 0 ; func end
+ 003C 7F                ret
+ 003D                   .dbsym l n 0 I
+ 003D                   .dbend
+ 003D                   .dbfunc e SerialReadData _SerialReadData fc
+ 003D           _SerialReadData::
+ 003D                   .dbline -1
+ 003D                   .dbline 38
+ 003D           ; }
+ 003D           ; 
+ 003D           ; //check if there is a compleet package avaliable
+ 003D           ; BOOL SerialReadData(void )
+ 003D           ; {
+ 003D                   .dbline 40
+ 003D           ;       //check if status contains anny error bits
+ 003D           ;       if (0xF0&SER_GET_STATUS())
+ 003D 4701F0            tst [_ser_status],-16
+ 0040 A00E              jz L7
+ 0042                   .dbline 42
+ 0042           ;       {       //reset in case of an error
+ 0042           ;               SER_CLEAR_ERROR();
+ 0042                   .dbline 42
+ 0042                   .dbline 42
+ 0042 2601F0            and [_ser_status],-16
+ 0045                   .dbline 42
+ 0045                   .dbline 42
+ 0045                   .dbline 43
+ 0045           ;               SER_RESET();
+ 0045                   .dbline 43
+ 0045                   .dbline 43
+ 0045 550100            mov [_ser_status],0
+ 0048                   .dbline 43
+ 0048                   .dbline 43
+ 0048                   .dbline 43
+ 0048                   .dbline 43
+ 0048 550000            mov [_ser_idx],0
+ 004B                   .dbline 43
+ 004B                   .dbline 43
+ 004B                   .dbline 43
+ 004B                   .dbline 43
+ 004B                   .dbline 44
+ 004B           ;               return 0;
+ 004B 5000              mov A,0
+ 004D 800C              xjmp L6
+ 004F           L7:
+ 004F                   .dbline 47
+ 004F           ;       }
+ 004F           ;       //ckeck if buffer is full
+ 004F           ;       if (SER_PEAK())
+ 004F 470101            tst [_ser_status],1
+ 0052 A005              jz L9
+ 0054                   .dbline 49
+ 0054           ;       {
+ 0054           ;               return 1;
+ 0054                   .dbline 49
+ 0054 5001              mov A,1
+ 0056 8003              xjmp L6
+ 0058           L9:
+ 0058                   .dbline 51
+ 0058           ;       }
+ 0058           ; return 0;
+ 0058 5000              mov A,0
+ 005A                   .dbline -2
+ 005A           L6:
+ 005A                   .dbline 0 ; func end
+ 005A 7F                ret
+ 005B                   .dbend
+ 005B                   .dbfunc e SerialConnectToPin _SerialConnectToPin fV
+ 005B           _SerialConnectToPin::
+ 005B                   .dbline -1
+ 005B                   .dbline 57
+ 005B           ; 
+ 005B           ; }
+ 005B           ; 
+ 005B           ; //reconnect RX8 to input pin
+ 005B           ; void SerialConnectToPin(void)
+ 005B           ; {
+ 005B                   .dbline 59
+ 005B           ;       //change driver Mode to input
+ 005B           ;       PRT0DM1|=(1<<5);
+ 005B 7110              or F,0x10  ; iopage = 1
+ 005D 430120            or REG[0x1],32
+ 0060                   .dbline 61
+ 0060           ;       //switch pin connection to RX8
+ 0060           ;       PRT0DM0&=~(1<<5);
+ 0060 4100DF            and REG[0],-33
+ 0063                   .dbline -2
+ 0063 70CF              and F,0xCF      ; iopage = 0
+ 0065           L11:
+ 0065                   .dbline 0 ; func end
+ 0065 7F                ret
+ 0066                   .dbend
+ 0066                   .dbfunc e ser_Tic _ser_Tic fV
+ 0066           _ser_Tic::
+ 0066                   .dbline -1
+ 0066                   .dbline 68
+ 0066           ; }
+ 0066           ; 
+ 0066           ; //this is called from the system timer once per ms
+ 0066           ; //ser_to is reset to zerro each time a char is recived by the serial interupt service
+ 0066           ; //if there has not been anny char recived for 5 consecutive calls then reset the index
+ 0066           ; void ser_Tic(void )
+ 0066           ; {
+ 0066                   .dbline 69
+ 0066           ;       ser_to++; //increment timeout
+ 0066 7602              inc [_ser_to]
+ 0068                   .dbline 70
+ 0068           ;       if (ser_idx!=0 && ser_to > 5) //to we have a timeout (>5ms)
+ 0068 3C0000            cmp [_ser_idx],0
+ 006B A00A              jz L13
+ 006D 5005              mov A,5
+ 006F 3A02              cmp A,[_ser_to]
+ 0071 D004              jnc L13
+ 0073           X1:
+ 0073                   .dbline 71
+ 0073           ;               ser_idx=0; //reset index
+ 0073 550000            mov [_ser_idx],0
+ 0076           L13:
+ 0076                   .dbline -2
+ 0076           L12:
+ 0076                   .dbline 0 ; func end
+ 0076 7F                ret
+ 0077                   .dbend
+                        .area bss(ram, con, rel)
+ 0000                   .dbfile E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\serial.c
+ 0000           L16:
+ 0000                   .blkb 1
+                        .area text(rom, con, rel)
+ 0077                   .dbfile E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\serial.c
+ 0077                   .dbfunc e RX8_1_Interrupt _RX8_1_Interrupt fV
+ 0077                   .dbsym s ser_c L16 c
+ 0077           _RX8_1_Interrupt::
+ 0077                   .dbline -1
+ 0077 08                push A
+ 0078 5100              mov A,[__r0]
+ 007A 08                push A
+ 007B 5100              mov A,[__r1]
+ 007D 08                push A
+ 007E                   .dbline 79
+ 007E           ; }
+ 007E           ; 
+ 007E           ; #define RX8_1_RX_ENABLE 1
+ 007E           ; #pragma interrupt_handler RX8_1_Interrupt
+ 007E           ; 
+ 007E           ; //interrupt handler called if a char is recived
+ 007E           ; void RX8_1_Interrupt(void )
+ 007E           ; {
+ 007E                   .dbline 82
+ 007E           ;       static BYTE ser_c; //the char buffer, defined as static to save stack space
+ 007E           ;       
+ 007E           ;       ser_to=0; //reset timeout
+ 007E 550200            mov [_ser_to],0
+ 0081 8059              xjmp L18
+ 0083           L17:
+ 0083                   .dbline 89
+ 0083           ; 
+ 0083           ; 
+ 0083           ;       //if a char is recived 
+ 0083           ;       //we use while instead of if because it can happen that another char is recived while we are here, 
+ 0083           ;       //in that case no extra interrop for that one will occour
+ 0083           ;       while (RX8_RX_COMPLETE & RX8_1_CONTROL_REG)
+ 0083           ;       {       //get the char
+ 0083                   .dbline 90
+ 0083           ;               ser_c=RX8_1_RX_BUFFER_REG;
+ 0083 5D2A              mov A,REG[0x2a]
+ 0085 5300              mov [L16],A
+ 0087                   .dbline 92
+ 0087           ;               //if we have no error store the char
+ 0087           ;               if (!(RX8_1_RX_ERROR & RX8_1_CONTROL_REG))
+ 0087 5D2B              mov A,REG[0x2b]
+ 0089 5300              mov [__r0],A
+ 008B 4700E0            tst [__r0],-32
+ 008E B02B              jnz L20
+ 0090                   .dbline 95
+ 0090           ;               {
+ 0090           ;                       //if there is still room in bufffer
+ 0090           ;                       if (ser_idx<SER_BUFFER_SIZE)
+ 0090                   .dbline 95
+ 0090 3C0010            cmp [_ser_idx],16
+ 0093 D021              jnc L22
+ 0095           X2:
+ 0095                   .dbline 97
+ 0095           ;                       {//store data
+ 0095           ;                               ser_databuf[ser_idx++]=ser_c;
+ 0095                   .dbline 97
+ 0095 5F0000            mov [__r1],[_ser_idx]
+ 0098 550000            mov [__r0],0
+ 009B 5100              mov A,[__r1]
+ 009D 0101              add A,1
+ 009F 5300              mov [_ser_idx],A
+ 00A1 060001            add [__r1],<_ser_databuf
+ 00A4 0E0001            adc [__r0],>_ser_databuf
+ 00A7 5100              mov A,[L16]
+ 00A9 3F00              mvi [__r1],A
+ 00AB                   .dbline 99
+ 00AB           ;                               //check if buffer is full now
+ 00AB           ;                               if (ser_idx==SER_BUFFER_SIZE)
+ 00AB 3C0010            cmp [_ser_idx],16
+ 00AE B035              jnz L15
+ 00B0                   .dbline 100
+ 00B0           ;                                       ser_status|=SER_BUFFERFULL; //flag that we are done
+ 00B0 2E0101            or [_ser_status],1
+ 00B3                   .dbline 101
+ 00B3           ;                       }
+ 00B3 8030              xjmp L15
+ 00B5           L22:
+ 00B5                   .dbline 103
+ 00B5           ;                       else 
+ 00B5           ;                               ser_status|=SER_BUFOVERRUN_ERROR; //flag a buffer overrun
+ 00B5 2E0110            or [_ser_status],16
+ 00B8                   .dbline 104
+ 00B8           ;                       return ;
+ 00B8 802B              xjmp L15
+ 00BA           L20:
+ 00BA                   .dbline 107
+ 00BA           ;               }
+ 00BA           ;               //if we got anny error
+ 00BA           ;               if(RX8_1_RX_ERROR & RX8_1_CONTROL_REG)
+ 00BA 5D2B              mov A,REG[0x2b]
+ 00BC 5300              mov [__r0],A
+ 00BE 4700E0            tst [__r0],-32
+ 00C1 A019              jz L26
+ 00C3                   .dbline 109
+ 00C3           ;               {
+ 00C3           ;                       ser_idx=0; //reset index , trash all we have so far
+ 00C3                   .dbline 109
+ 00C3 550000            mov [_ser_idx],0
+ 00C6                   .dbline 110
+ 00C6           ;                       ser_status|=RX8_1_CONTROL_REG & RX8_1_RX_ERROR; //update status
+ 00C6 5D2B              mov A,REG[0x2b]
+ 00C8 21E0              and A,-32
+ 00CA 2C01              or [_ser_status],A
+ 00CC                   .dbline 112
+ 00CC           ;                       //special case framing error
+ 00CC           ;                       if (RX8_1_RX_FRAMING_ERROR & RX8_1_CONTROL_REG)
+ 00CC 5D2B              mov A,REG[0x2b]
+ 00CE 5300              mov [__r0],A
+ 00D0 470020            tst [__r0],32
+ 00D3 A007              jz L28
+ 00D5                   .dbline 114
+ 00D5           ;                       {
+ 00D5           ;                               RX8_1_CONTROL_REG&=~RX8_1_RX_ENABLE; //disable RX
+ 00D5                   .dbline 114
+ 00D5 412BFE            and REG[0x2b],-2
+ 00D8                   .dbline 115
+ 00D8           ;                               RX8_1_CONTROL_REG|=RX8_1_RX_ENABLE; //enable RX
+ 00D8 432B01            or REG[0x2b],1
+ 00DB                   .dbline 116
+ 00DB           ;                       }
+ 00DB           L28:
+ 00DB                   .dbline 117
+ 00DB           ;               }
+ 00DB           L26:
+ 00DB                   .dbline 118
+ 00DB           ;       }
+ 00DB           L18:
+ 00DB                   .dbline 88
+ 00DB 5D2B              mov A,REG[0x2b]
+ 00DD 5300              mov [__r0],A
+ 00DF 470008            tst [__r0],8
+ 00E2 BFA0              jnz L17
+ 00E4                   .dbline -2
+ 00E4           L15:
+ 00E4 18                pop A
+ 00E5 5300              mov [__r1],A
+ 00E7 18                pop A
+ 00E8 5300              mov [__r0],A
+ 00EA 18                pop A
+ 00EB                   .dbline 0 ; func end
+ 00EB 7E                reti
+ 00EC                   .dbend
+                        .area bss(ram, con, rel)
+ 0001                   .dbfile E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\serial.c
+ 0001           _ser_databuf::
+ 0001                   .blkb 16
+ 0011                   .dbsym e ser_databuf _ser_databuf A[16:16]c

@@ -1,0 +1,5 @@
+-F0x30 -g -blit:0x150.0xfff 
+ -bdata:0.0xFF -rwh:SSCParmBlk:0x00F7.0x00FF  -O -elim:UserModules 
+ -o"output/Sateliet_to_CPPMV8" 
+obj/dsm_remote.o obj/main.o obj/ppm.o obj/serial.o obj/timer.o 	
+ ./lib/libPSoc.a -Le:/PROGRA~2/Cypress/PSOCDE~1/5.4/Common/CYPRES~1/tools/lib/SMM e:/PROGRA~2/Cypress/PSOCDE~1/5.4/Common/CYPRES~1/tools/lib/CY8C21020/cms.a e:/PROGRA~2/Cypress/PSOCDE~1/5.4/Common/CYPRES~1/tools/lib/SMM/UASW/NoMAC/arith.a  

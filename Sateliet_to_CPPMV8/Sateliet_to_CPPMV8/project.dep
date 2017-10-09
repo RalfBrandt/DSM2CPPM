@@ -1,0 +1,59 @@
+# DO NOT DELETE
+./obj/boot.o : \
+   E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\lib\GLOBAL~1.INC\
+   E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\memory.inc\
+   e:/PROGRA~2/Cypress/PSOCDE~1/5.4/Common/CYPRES~1/tools/include/CY8C21~2/m8c.inc\
+   e:/PROGRA~2/Cypress/PSOCDE~1/5.4/Common/CYPRES~1/tools/include/CY8C21~2/m8ssc.inc
+./obj/dsm_remote.o :  ./lib/COUNTE~1.H ./lib/PSoCAPI.h ./lib/PSOCGP~1.H\
+   ./lib/PWM16_1.h ./lib/RX8_1.h\
+   E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\DSM_RE~1.H\
+   E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\ppm.h\
+   E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\serial.h\
+   E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\timer.h\
+   e:/PROGRA~2/Cypress/PSOCDE~1/5.4/Common/CYPRES~1/tools/include/CY8C21~2/m8c.h
+./obj/main.o :  ./lib/COUNTE~1.H ./lib/PSoCAPI.h ./lib/PSOCGP~1.H\
+   ./lib/PWM16_1.h ./lib/RX8_1.h\
+   E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\DSM_RE~1.H\
+   E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\ppm.h\
+   E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\serial.h\
+   E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\timer.h\
+   e:/PROGRA~2/Cypress/PSOCDE~1/5.4/Common/CYPRES~1/tools/include/CY8C21~2/m8c.h
+./obj/ppm.o :  ./lib/COUNTE~1.H ./lib/PSoCAPI.h ./lib/PSOCGP~1.H\
+   ./lib/PWM16_1.h ./lib/RX8_1.h\
+   E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\ppm.h\
+   e:/PROGRA~2/Cypress/PSOCDE~1/5.4/Common/CYPRES~1/tools/include/CY8C21~2/m8c.h
+./obj/serial.o :  ./lib/COUNTE~1.H ./lib/PSoCAPI.h ./lib/PSOCGP~1.H\
+   ./lib/PWM16_1.h ./lib/RX8_1.h\
+   E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\serial.h\
+   e:/PROGRA~2/Cypress/PSOCDE~1/5.4/Common/CYPRES~1/tools/include/CY8C21~2/m8c.h
+./obj/timer.o :  ./lib/COUNTE~1.H ./lib/PSoCAPI.h ./lib/PSOCGP~1.H\
+   ./lib/PWM16_1.h ./lib/RX8_1.h\
+   E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\serial.h\
+   E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\timer.h\
+   e:/PROGRA~2/Cypress/PSOCDE~1/5.4/Common/CYPRES~1/tools/include/CY8C21~2/m8c.h
+./lib/obj/counter8_1.o :  ./lib/COUNTE~1.INC\
+   E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\memory.inc\
+   e:/PROGRA~2/Cypress/PSOCDE~1/5.4/Common/CYPRES~1/tools/include/CY8C21~2/m8c.inc
+./lib/obj/counter8_1int.o :  ./lib/COUNTE~1.INC\
+   E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\memory.inc\
+   e:/PROGRA~2/Cypress/PSOCDE~1/5.4/Common/CYPRES~1/tools/include/CY8C21~2/m8c.inc
+./lib/obj/psocconfig.o :  ./lib/GLOBAL~1.INC\
+   E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\memory.inc\
+   e:/PROGRA~2/Cypress/PSOCDE~1/5.4/Common/CYPRES~1/tools/include/CY8C21~2/m8c.inc
+./lib/obj/psocconfigtbl.o : \
+   e:/PROGRA~2/Cypress/PSOCDE~1/5.4/Common/CYPRES~1/tools/include/CY8C21~2/m8c.inc
+./lib/obj/psocgpioint.o :  ./lib/PSOCGP~1.INC\
+   e:/PROGRA~2/Cypress/PSOCDE~1/5.4/Common/CYPRES~1/tools/include/CY8C21~2/m8c.inc
+./lib/obj/pwm16_1.o :  ./lib/PWM16_1.inc\
+   E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\memory.inc\
+   e:/PROGRA~2/Cypress/PSOCDE~1/5.4/Common/CYPRES~1/tools/include/CY8C21~2/m8c.inc
+./lib/obj/pwm16_1int.o :  ./lib/PWM16_1.inc\
+   E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\memory.inc\
+   e:/PROGRA~2/Cypress/PSOCDE~1/5.4/Common/CYPRES~1/tools/include/CY8C21~2/m8c.inc
+./lib/obj/rx8_1.o :  ./lib/RX8_1.inc\
+   E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\memory.inc\
+   e:/PROGRA~2/Cypress/PSOCDE~1/5.4/Common/CYPRES~1/tools/include/CY8C21~2/m8c.inc
+./lib/obj/rx8_1int.o :  ./lib/RX8_1.inc\
+   E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\memory.inc\
+   e:/PROGRA~2/Cypress/PSOCDE~1/5.4/Common/CYPRES~1/tools/include/CY8C21~2/m8c.inc
+./lib/obj/rx8_1plus.o : 

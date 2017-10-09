@@ -1,0 +1,117 @@
+                        .module main.c
+                        .area text(rom, con, rel)
+ 0000                   .dbfile ./main.c
+ 0000                   .dbfile E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\main.c
+ 0000                   .dbfunc e main _main fV
+ 0000           ;       new_data -> X+0
+ 0000           _main::
+ 0000                   .dbline -1
+ 0000 10                push X
+ 0001 4F                mov X,SP
+ 0002 3801              add SP,1
+ 0004                   .dbline 15
+ 0004           ; //----------------------------------------------------------------------------
+ 0004           ; // C main line
+ 0004           ; //----------------------------------------------------------------------------
+ 0004           ; 
+ 0004           ; #include <m8c.h>        // part specific constants and macros
+ 0004           ; #include "PSoCAPI.h"    // PSoC API definitions for all User Modules
+ 0004           ; #include "ppm.h"
+ 0004           ; #include "serial.h"
+ 0004           ; #include "timer.h"
+ 0004           ; #include "DSM_Remote.h"
+ 0004           ; 
+ 0004           ; 
+ 0004           ; 
+ 0004           ; void main(void)
+ 0004           ; {
+ 0004                   .dbline 16
+ 0004           ; BOOL new_data=0;
+ 0004 560000            mov [X+0],0
+ 0007                   .dbline 18
+ 0007           ;       //activate systick counter
+ 0007           ;       TimerInit();
+ 0007 7C0000            xcall _TimerInit
+ 000A                   .dbline 19
+ 000A           ;       DSM_CheckForReciver();  
+ 000A 7C0000            xcall _DSM_CheckForReciver
+ 000D                   .dbline 20
+ 000D           ;       SerialRX_Init();
+ 000D 7C0000            xcall _SerialRX_Init
+ 0010                   .dbline 21
+ 0010           ;       ppm_Init();
+ 0010 7C0000            xcall _ppm_Init
+ 0013 8023              xjmp L3
+ 0015           L2:
+ 0015                   .dbline 23
+ 0015           ;       while (1)
+ 0015           ;       {
+ 0015                   .dbline 24
+ 0015           ;               if (SerialReadData())
+ 0015 7C0000            xcall _SerialReadData
+ 0018 3900              cmp A,0
+ 001A A00C              jz L5
+ 001C                   .dbline 26
+ 001C           ;               {
+ 001C           ;                       new_data|=DSM_process_Data();
+ 001C                   .dbline 26
+ 001C 7C0000            xcall _DSM_process_Data
+ 001F 2D00              or [X+0],A
+ 0021                   .dbline 27
+ 0021           ;                       SER_RESET();
+ 0021                   .dbline 27
+ 0021                   .dbline 27
+ 0021 550000            mov [_ser_status],0
+ 0024                   .dbline 27
+ 0024                   .dbline 27
+ 0024                   .dbline 27
+ 0024                   .dbline 27
+ 0024 550000            mov [_ser_idx],0
+ 0027                   .dbline 27
+ 0027                   .dbline 27
+ 0027                   .dbline 27
+ 0027                   .dbline 27
+ 0027                   .dbline 28
+ 0027           ;               }
+ 0027           L5:
+ 0027                   .dbline 29
+ 0027           ;               if (PPM_IS_PPM_DONE())
+ 0027 3C0000            cmp [_ppm_Run],0
+ 002A B00C              jnz L7
+ 002C                   .dbline 31
+ 002C           ;               {
+ 002C           ;                       if (new_data)
+ 002C                   .dbline 31
+ 002C 3D0000            cmp [X+0],0
+ 002F A007              jz L9
+ 0031                   .dbline 33
+ 0031           ;                       {
+ 0031           ;                               new_data=0;     
+ 0031                   .dbline 33
+ 0031 560000            mov [X+0],0
+ 0034                   .dbline 34
+ 0034           ;                               PPM_START_ONE_PPM_TRAIN();
+ 0034                   .dbline 34
+ 0034 550001            mov [_ppm_Run],1
+ 0037                   .dbline 34
+ 0037                   .dbline 34
+ 0037                   .dbline 35
+ 0037           ;                       }
+ 0037           L9:
+ 0037                   .dbline 36
+ 0037           ;               }
+ 0037           L7:
+ 0037                   .dbline 37
+ 0037           ;       }
+ 0037           L3:
+ 0037                   .dbline 22
+ 0037 8FDD              xjmp L2
+ 0039           X0:
+ 0039                   .dbline -2
+ 0039           L1:
+ 0039 38FF              add SP,-1
+ 003B 20                pop X
+ 003C                   .dbline 0 ; func end
+ 003C 8FFF              jmp .
+ 003E                   .dbsym l new_data 0 c
+ 003E                   .dbend

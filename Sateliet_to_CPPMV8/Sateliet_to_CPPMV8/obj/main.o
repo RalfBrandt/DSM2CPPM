@@ -1,0 +1,66 @@
+XH
+H 1 areas A global symbols
+M main.c
+S _ppm_Run Ref0000
+S _ser_idx Ref0000
+S _SerialRX_Init Ref0000
+S _DSM_CheckForReciver Ref0000
+S _DSM_process_Data Ref0000
+S _ppm_Init Ref0000
+S _ser_status Ref0000
+S _SerialReadData Ref0000
+S _TimerInit Ref0000
+A text size 3E flags 0
+dbfile ./main.c
+dbfile E:\WORKSP~1\DSM2PPM\PSOCDE~1\SATELI~3\SATELI~1\SATELI~1\main.c
+dbfunc e main 0 fV
+dbsym l new_data 0 c
+dbline FFFFFFFF 0
+dbline F 4
+dbline 10 4
+dbline 12 7
+dbline 13 A
+dbline 14 D
+dbline 15 10
+dbline 17 15
+dbline 18 15
+dbline 1A 1C
+dbline 1A 1C
+dbline 1B 21
+dbline 1B 21
+dbline 1B 21
+dbline 1B 24
+dbline 1B 24
+dbline 1B 24
+dbline 1B 24
+dbline 1B 27
+dbline 1B 27
+dbline 1B 27
+dbline 1B 27
+dbline 1C 27
+dbline 1D 27
+dbline 1F 2C
+dbline 1F 2C
+dbline 21 31
+dbline 21 31
+dbline 22 34
+dbline 22 34
+dbline 22 37
+dbline 22 37
+dbline 23 37
+dbline 24 37
+dbline 25 37
+dbline 16 37
+dbline FFFFFFFE 39
+dbline 0 3C
+S _main Def0000
+T 00 00 10 4F 38 01 56 00 00 7C 00 00 7C 00 00 7C
+R 00 00 00 00 02 0A 00 08 02 0D 00 03
+T 00 0E 00 00 7C 00 00 80 23 7C 00 00 39 00 A0 0C
+R 00 00 00 00 02 02 00 02 02 05 00 05 02 0A 00 07
+T 00 1C 7C 00 00 2D 00 55 00 00 00 55 00 00 00 3C
+R 00 00 00 00 02 03 00 04 03 08 00 06 03 0C 00 01
+T 00 28 00 00 00 B0 0C 3D 00 00 A0 07 56 00 00 55
+R 00 00 00 00 03 02 00 00
+T 00 35 00 00 01 8F DD 38 FF 20 8F FF
+R 00 00 00 00 03 02 00 00
